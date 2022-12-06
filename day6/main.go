@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 // Main function
@@ -18,18 +19,33 @@ func main() {
 }
 
 func charsToPacketStartMarker(input string) int {
-	return charsToUniqueSeq(input, 4)
+	return countCharsToUniqueSeq(input, 4)
 }
 
 func charsToMessageStartMarker(input string) int {
-	return charsToUniqueSeq(input, 14)
+	return countCharsToUniqueSeq(input, 14)
 }
 
-func charsToUniqueSeq(input string, seqlen int) int {
-	for i := seqlen; i < len(input); i++ {
-		precSeq := input[i-seqlen : i]
-		if allDifferent((precSeq)) {
-			return i
+func countCharsToUniqueSeq(input string, seqlen int) int {
+	chars := strings.Split(input, "")
+	seen := make(map[string]int)
+
+	// build initial map
+	for i := 0; i < seqlen-1; i++ {
+		r := chars[i]
+		seen[r]++
+	}
+
+	// look for unique sequences
+	for i := seqlen - 1; i < len(input); i++ {
+		r := chars[i]
+		seen[r]++
+
+		if hasNoDuplicates(seen) {
+			return i + 1
+		} else {
+			rmv := chars[i-seqlen+1]
+			seen[rmv]--
 		}
 	}
 
@@ -37,14 +53,11 @@ func charsToUniqueSeq(input string, seqlen int) int {
 	return 0
 }
 
-func allDifferent(input string) bool {
-	seen := make(map[rune]bool)
-
-	for _, r := range input {
-		if seen[r] {
+func hasNoDuplicates(seen map[string]int) bool {
+	for _, v := range seen {
+		if v > 1 {
 			return false
 		}
-		seen[r] = true
 	}
 	return true
 }
