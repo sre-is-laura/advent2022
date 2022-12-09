@@ -19,74 +19,90 @@ type Point struct {
 }
 
 type Board struct {
-	tail, head  Point
+	knots       []Point
 	tailHistory map[Point]bool
 }
 
-func NewBoard() *Board {
+func NewBoard(numTails int) *Board {
 	th := make(map[Point]bool)
+	knots := make([]Point, numTails+1)
 	b := Board{
 		tailHistory: th,
+		knots:       knots,
 	}
-	b.tailHistory[b.tail] = true
+	b.tailHistory[b.tail()] = true
 	return &b
 }
 
 // Main function
 func main() {
-	//moves := readInput("./testinput.txt")
+	//moves := readInput("./testinput2.txt")
 	moves := readInput("./input.txt")
 	//fmt.Printf("Moves %+v\n", moves)
 
-	board := NewBoard()
+	board := NewBoard(9)
 	for _, m := range moves {
 		board.doMove(m)
-		//fmt.Printf("Board position after move %+v, tail positions seen %d\n", m, board.countTailPositions())
-		//fmt.Printf("Head: %+v, tail %+v\n", board.head, board.tail)
-		//board.printTailPositions()
-		//fmt.Printf("\n\n")
+		/*fmt.Printf("Board position after move %+v, tail positions seen %d\n", m, board.countTailPositions())
+		fmt.Printf("Head: %+v, tail %+v\n", board.head(), board.tail())
+		board.printTailPositions()
+		fmt.Printf("\n\n")*/
 	}
 	fmt.Printf("Tail position count %d\n", board.countTailPositions())
 }
 
 func (b *Board) doMove(m Move) {
-	// todo
 	for i := 0; i < m.distance; i++ {
 		b.moveOneStep(m.dir)
 	}
 }
 
 func (b *Board) moveOneStep(dir string) {
-	b.head = getNextPos(dir, b.head)
+	b.knots[0] = getNextPos(dir, b.head())
 
-	// apply planck length rules
-	if b.head.x == b.tail.x || b.head.y == b.tail.y { // move if tail is more than 1 behind head
-		if b.head.y-b.tail.y > 1 {
-			b.tail.y++
-		} else if b.tail.y-b.head.y > 1 {
-			b.tail.y--
-		}
-
-		if b.head.x-b.tail.x > 1 {
-			b.tail.x++
-		} else if b.tail.x-b.head.x > 1 {
-			b.tail.x--
-		}
-	} else if !touching(b.head, b.tail) { // move diagonally in direction of tail
-		if b.head.y > b.tail.y {
-			b.tail.y++
-		} else {
-			b.tail.y--
-		}
-
-		if b.head.x > b.tail.x {
-			b.tail.x++
-		} else {
-			b.tail.x--
-		}
+	for i := 1; i < len(b.knots); i++ {
+		b.knots[i] = planckRules(b.knots[i-1], b.knots[i])
 	}
 
-	b.tailHistory[b.tail] = true
+	b.tailHistory[b.tail()] = true
+}
+
+func planckRules(head Point, tail Point) Point {
+	// apply planck length rules
+	if head.x == tail.x || head.y == tail.y { // move if tail is more than 1 behind head
+		if head.y-tail.y > 1 {
+			tail.y++
+		} else if tail.y-head.y > 1 {
+			tail.y--
+		}
+
+		if head.x-tail.x > 1 {
+			tail.x++
+		} else if tail.x-head.x > 1 {
+			tail.x--
+		}
+	} else if !touching(head, tail) { // move diagonally in direction of tail
+		if head.y > tail.y {
+			tail.y++
+		} else {
+			tail.y--
+		}
+
+		if head.x > tail.x {
+			tail.x++
+		} else {
+			tail.x--
+		}
+	}
+	return tail
+}
+
+func (b *Board) tail() Point {
+	return b.knots[len(b.knots)-1]
+}
+
+func (b *Board) head() Point {
+	return b.knots[0]
 }
 
 func touching(p1 Point, p2 Point) bool {
@@ -131,9 +147,9 @@ func (b Board) printTailPositions() {
 	for i := maxY + 1; i >= 0; i-- {
 		for j := 0; j <= maxX+1; j++ {
 			p := Point{j, i}
-			if b.tail == p {
+			if b.tail() == p {
 				fmt.Printf("T")
-			} else if b.head == p {
+			} else if b.head() == p {
 				fmt.Printf("H")
 			} else if b.tailHistory[p] {
 				fmt.Printf("#")
