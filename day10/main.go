@@ -36,7 +36,6 @@ func NewSimpleCPU() *SimpleCPU {
 func main() {
 	//instrs := readInput("./testinput.txt")
 	instrs := readInput("./input.txt")
-	//fmt.Printf("Instructions: %+v\n", instrs)
 
 	cpu := NewSimpleCPU()
 	for _, i := range instrs {
@@ -84,7 +83,6 @@ func (c *SimpleCPU) drawPixel() {
 	drawRow := int((c.cycleCount - drawCol) / 40)
 
 	if c.spritePos(drawCol) {
-		//fmt.Printf("Drawing pixel %d, %d\n", drawCol, drawRow)
 		c.crt[drawRow] += "#"
 	} else {
 		c.crt[drawRow] += " "
